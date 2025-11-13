@@ -11,7 +11,6 @@ Single-page Flask application for distance conversion:
 - `requirements.txt`: Python dependencies
 - `Dockerfile`: Container configuration
 - `manifest.yaml`: Kubernetes deployment configuration
-- `pytest.ini`: Test configuration
 
 ## Application Structure
 
@@ -30,7 +29,6 @@ Single-page Flask application for distance conversion:
 ├── requirements.txt     # Python dependencies
 ├── Dockerfile          # Container image definition
 ├── manifest.yaml       # Kubernetes deployment config
-├── pytest.ini          # Test configuration
 ├── templates/          # Jinja2 HTML templates
 │   └── index.html     # Single-page application template
 └── static/            # Static assets

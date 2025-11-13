@@ -25,10 +25,6 @@ inclusion: always
 - **DigitalOcean Container Registry**: Image storage
 - **LoadBalancer Service**: External access
 
-## Testing
-
-- **pytest**: Testing framework (configured but no tests yet)
-
 ## Common Commands
 
 ### Development
@@ -38,15 +34,6 @@ python main.py
 
 # Run with Gunicorn locally
 gunicorn -w 4 -b 0.0.0.0:8000 main:app
-```
-
-### Testing
-```bash
-# Run all tests
-pytest
-
-# Run with verbose output
-pytest -v
 ```
 
 ### Docker
