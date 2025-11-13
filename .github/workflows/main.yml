@@ -24,6 +24,9 @@ jobs:
 
       - name: Debug - Verificar variáveis
         run: |
+          echo "Vars existentes: ${{ vars }}"
+          echo "secrets existentes: ${{ secrets }}"
+          echo "docker existentes: ${{ docker }}"
           echo "Username existe: ${{ vars.DOCKERHUB_USERNAME != '' }}"
           echo "Token existe: ${{ secrets.DOCKERHUB_TOKEN != '' }}"
           echo "Username length: ${#DOCKERHUB_USERNAME}"
