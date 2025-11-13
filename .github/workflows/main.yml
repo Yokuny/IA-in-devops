@@ -6,6 +6,7 @@ on:
 jobs:
   CI:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Baixando código do repositório
         uses: actions/checkout@v5
@@ -22,24 +23,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Debug - Listar todas vars e secrets
+      - name: Debug - Verificar environment vars
         run: |
-          echo "=== TODAS AS VARS DISPONÍVEIS ==="
-          echo '${{ toJSON(vars) }}'
-          echo ""
-          echo "=== TODAS AS SECRETS (keys) ==="
-          echo '${{ toJSON(secrets) }}' | jq 'keys'
-          echo ""
-          echo "=== VERIFICAÇÕES ESPECÍFICAS ==="
-          echo "DOCKERHUB_USERNAME existe: ${{ vars.DOCKERHUB_USERNAME != '' }}"
-          echo "DOCKERHUB_USERNAME value: '${{ vars.DOCKERHUB_USERNAME }}'"
+          echo "=== ENVIRONMENT VARS ==="
+          echo "DOCKERHUB_USERNAME: $DOCKERHUB_USERNAME"
           echo "DOCKERHUB_TOKEN existe: ${{ secrets.DOCKERHUB_TOKEN != '' }}"
           if [ -n "$DOCKERHUB_TOKEN" ]; then
-            echo "Token length: ${#DOCKERHUB_TOKEN}"
+            echo "Token configurado com ${#DOCKERHUB_TOKEN} caracteres"
           else
-            echo "Token está vazio!"
+            echo "Token NÃO configurado!"
           fi
         env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login no docker hub
