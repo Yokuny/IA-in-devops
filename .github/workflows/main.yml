@@ -22,16 +22,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Debug - Verificar variáveis
+      - name: Debug - Listar todas vars e secrets
         run: |
-          echo "Vars existentes: ${{ vars }}"
-          echo "secrets existentes: ${{ secrets }}"
-          echo "Username existe: ${{ vars.DOCKERHUB_USERNAME != '' }}"
-          echo "Token existe: ${{ secrets.DOCKERHUB_TOKEN != '' }}"
-          echo "Username length: ${#DOCKERHUB_USERNAME}"
-          echo "Token length: ${#DOCKERHUB_TOKEN}"
+          echo "=== TODAS AS VARS DISPONÍVEIS ==="
+          echo '${{ toJSON(vars) }}'
+          echo ""
+          echo "=== TODAS AS SECRETS (keys) ==="
+          echo '${{ toJSON(secrets) }}' | jq 'keys'
+          echo ""
+          echo "=== VERIFICAÇÕES ESPECÍFICAS ==="
+          echo "DOCKERHUB_USERNAME existe: ${{ vars.DOCKERHUB_USERNAME != '' }}"
+          echo "DOCKERHUB_USERNAME value: '${{ vars.DOCKERHUB_USERNAME }}'"
+          echo "DOCKERHUB_TOKEN existe: ${{ secrets.DOCKERHUB_TOKEN != '' }}"
+          if [ -n "$DOCKERHUB_TOKEN" ]; then
+            echo "Token length: ${#DOCKERHUB_TOKEN}"
+          else
+            echo "Token está vazio!"
+          fi
         env:
-          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login no docker hub
