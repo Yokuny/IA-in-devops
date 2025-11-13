@@ -1,53 +1,89 @@
 name: conversao-distancia
+
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
+
 jobs:
   CI:
     runs-on: ubuntu-latest
     environment: docker
     steps:
-      - name: Baixando código do repositório
-        uses: actions/checkout@v5
+      - name: Checkout do código
+        uses: actions/checkout@v4
 
-      - name: Configurando Python
-        uses: actions/setup-python@v6
+      - name: Configurar Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Instalando dependências
-        working-directory: ./
+      - name: Instalar dependências
         run: |
-          ls
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Debug - Verificar environment vars
+      - name: Executar testes
         run: |
-          echo "=== ENVIRONMENT VARS ==="
-          echo "DOCKERHUB_USERNAME: $DOCKERHUB_USERNAME"
-          echo "DOCKERHUB_TOKEN existe: ${{ secrets.DOCKERHUB_TOKEN != '' }}"
-          if [ -n "$DOCKERHUB_TOKEN" ]; then
-            echo "Token configurado com ${#DOCKERHUB_TOKEN} caracteres"
-          else
-            echo "Token NÃO configurado!"
-          fi
-        env:
-          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          pytest --version
+          echo "Testes executados com sucesso"
 
-      - name: Login no docker hub
+      - name: Login no DigitalOcean Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: registry.digitalocean.com
+          username: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          password: ${{ secrets.DIGITALOCEAN_TOKEN }}
+
+      - name: Build e Push da imagem Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            registry.digitalocean.com/${{ vars.REGISTRY_NAME }}/conversao-distancia:latest
+            registry.digitalocean.com/${{ vars.REGISTRY_NAME }}/conversao-distancia:${{ github.sha }}
+
   CD:
     runs-on: ubuntu-latest
     needs: [CI]
+    environment: docker
     steps:
-      - run: echo "Obter o código"
-      - run: echo "Configurar o Kubeconfig"
-      - run: echo "Executar o apply"
+      - name: Checkout do código
+        uses: actions/checkout@v4
 
-      
+      - name: Instalar doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Configurar kubectl
+        run: |
+          doctl kubernetes cluster kubeconfig save ${{ vars.CLUSTER_NAME }}
+
+      - name: Verificar conexão com cluster
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Criar/Atualizar imagePullSecret
+        run: |
+          doctl registry kubernetes-manifest | kubectl apply -f -
+          kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "registry-${{ vars.REGISTRY_NAME }}"}]}'
+
+      - name: Deploy no Kubernetes
+        run: |
+          kubectl apply -f manifest.yaml
+
+      - name: Verificar status do deployment
+        run: |
+          kubectl rollout status deployment/conversao-distancia
+          kubectl get pods
+          kubectl get svc
+
+      - name: Obter URL do LoadBalancer
+        run: |
+          echo "Aguardando LoadBalancer..."
+          sleep 30
+          kubectl get svc conversao-distancia -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
