@@ -6,7 +6,7 @@ on:
 jobs:
   CI:
     runs-on: ubuntu-latest
-    environment: production
+    environment: docker
     steps:
       - name: Baixando código do repositório
         uses: actions/checkout@v5
