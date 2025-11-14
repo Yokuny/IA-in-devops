@@ -8,7 +8,7 @@ on:
 jobs:
   CI:
     runs-on: ubuntu-latest
-    environment: docker
+    environment: production
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -27,8 +27,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: registry.digitalocean.com
-          username: ${{ secrets.DIGITALOCEAN_TOKEN }}
-          password: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build e Push da imagem Docker
         uses: docker/build-push-action@v5
@@ -43,7 +43,7 @@ jobs:
   CD:
     runs-on: ubuntu-latest
     needs: [CI]
-    environment: docker
+    environment: production
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4

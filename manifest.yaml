@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: conversao-distancia
-        image: registry.digitalocean.com/conversao-distancia-registry/conversao-distancia:latest
+        image: registry.digitalocean.com/git-action/conversao-distancia:latest
         ports:
         - containerPort: 8000
           name: http
